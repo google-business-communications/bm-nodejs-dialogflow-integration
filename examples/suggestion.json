@@ -1,0 +1,28 @@
+{
+  "name": "default",
+  "representative": {
+    "representativeType": "BOT"
+  },
+  "suggestions": [
+    {
+      "reply": {
+        "text": "What are your hours?",
+        "postbackData": "What are your hours?"
+      }
+    },
+    {
+      "reply": {
+        "text": "What's on your menu?",
+        "postbackData": "What's on your menu?"
+      }
+    },
+    {
+      "reply": {
+        "text": "Can I place an order?",
+        "postbackData": "Can I place an order?"
+      }
+    }
+  ],
+  "text": "Sorry, I didn't get that. Please take a look at these suggestions",
+  "fallback": "The message could not be displayed."
+}

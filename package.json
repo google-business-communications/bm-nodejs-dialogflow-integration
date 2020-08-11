@@ -1,0 +1,52 @@
+{
+  "name": "bizmsg-dialogflow-bot",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www",
+    "test": "nyc mocha",
+    "deploy": "gcloud app deploy"
+  },
+  "dependencies": {
+    "@google-cloud/dialogflow": "^2.0.0",
+    "axios": "^0.19.2",
+    "body-parser": "^1.19.0",
+    "businesscommunications": "^1.0.0",
+    "businessmessages": "^1.0.0",
+    "cheerio": "^1.0.0-rc.3",
+    "concurrently": "^5.2.0",
+    "cookie-parser": "~1.4.3",
+    "countries-and-timezones": "^2.2.0",
+    "debug": "^4.1.1",
+    "ejs": "^3.1.3",
+    "express": "^4.17.1",
+    "firebase-admin": "^8.12.1",
+    "googleapis": "^52.1.0",
+    "googleapis-common": "^4.3.0",
+    "http-errors": "^1.7.3",
+    "moment": "^2.26.0",
+    "morgan": "^1.10.0",
+    "node-cron": "^2.0.3",
+    "pb-util": "^0.1.3",
+    "randomstring": "^1.1.5",
+    "request": "^2.88.0",
+    "sinon": "^9.0.2",
+    "uuid": "^8.1.0"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "eslint": "^7.1.0",
+    "eslint-config-google": "^0.14.0",
+    "mocha": "^7.2.0",
+    "nock": "^12.0.3",
+    "nyc": "^15.1.0"
+  },
+  "nyc": {
+    "exclude": [
+      "test/",
+      "lib/bm_api_helper.js",
+      "lib/businessmessages/"
+    ]
+  }
+}

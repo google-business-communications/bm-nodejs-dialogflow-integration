@@ -1,0 +1,47 @@
+{
+  "richCard": {
+    "standaloneCard": {
+      "cardContent": {
+        "description": "Our Menu",
+        "suggestions": [
+          {
+            "reply": {
+              "text": "Order from menu",
+              "postbackData": "Place an order"
+            }
+          },
+          {
+            "action": {
+              "postbackData": "View Menu",
+              "text": "View Full Menu",
+              "openUrlAction": {
+                "url": "http://google.com"
+              }
+            }
+          }
+        ],
+        "media": {
+          "contentInfo": {
+            "altText": "full menu",
+            "fileUrl": "https://images.pexels.com/photos/612790/pexels-photo-612790.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
+            "forceRefresh": true
+          },
+          "height": "MEDIUM"
+        },
+        "title": "Menu"
+      }
+    }
+  },
+  "fallback": "Menu",
+  "representative": {
+    "representativeType": "BOT"
+  },
+  "suggestions": [
+    {
+      "reply": {
+        "text": "What are your hours?",
+        "postbackData": "What are your hours?"
+      }
+    }
+  ]
+}
