@@ -1,0 +1,6 @@
+node_modules/
+.nyc_output/
+resources/*credentials.json
+resources/*json
+admin/resources/*credentials.json
+.DS_Store
