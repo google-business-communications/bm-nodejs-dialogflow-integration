@@ -71,6 +71,7 @@ const firebaseUtil = {
           return data;
         },
         () => {
+          // on finish, run callback if present
           if (callback !== undefined) {
             callback();
           }
@@ -163,12 +164,13 @@ const firebaseUtil = {
       });
     });
   },
+
   /**
    * createMessageListener - Creates a message to listen for the latest live
    * agent messages and respond
-   * @param {String} agentId The Agent ID
-   * @param  {string} conversationId The Conversation ID
-   * @param  {function} callback Callback to run with message details
+   * @param {string} agentId The Agent ID
+   * @param {string} conversationId The Conversation ID
+   * @param {function} callback Callback to run with message details
    */
   createMessageListener: (agentId, conversationId, callback) => {
     const db = firebase.database();
