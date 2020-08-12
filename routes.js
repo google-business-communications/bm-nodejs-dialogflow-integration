@@ -127,7 +127,7 @@ async function handleByServer(requestBody) {
 }
 
 /**
- * Direct a message to Live Agent
+ * Direct a message to a Live Agent
  * @param {object} requestBody Request body of incoming message
  */
 async function handleByAgent(requestBody) {
@@ -179,7 +179,7 @@ async function handleByAgent(requestBody) {
 /**
  * Validates that a response contains a message or suggestionResponse
  * and calls handleResponse
- * @param {string} requestBody HTTP request body from callback
+ * @param {object} requestBody HTTP request body from callback
  */
 async function directMessage(requestBody) {
   // Extract the message payload parameters

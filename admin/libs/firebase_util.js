@@ -19,16 +19,17 @@ const firebase = require('../../lib/firebase_handler.js').firebase;
 // Firebase utility class for managing search queries for an agent
 // (migrated from Datastore)
 const firebaseUtil = {
+
   /**
    * Gets a mock search entry point based on the agentId.
    *
-   * @param {string} agentId The agent id with the associated search query.
+   * @param {string} agentName The agent id with the associated search query.
    * @param {function} callback Callback method for after
    * the method is complete.
    */
-  getMock: (agentId, callback) => {
+  getMock: (agentName, callback) => {
     // remove "brands/" from agent ID
-    agentId = agentId.substring(agentId.lastIndexOf('/') + 1);
+    const agentId = agentName.substring(agentName.lastIndexOf('/') + 1);
     const db = firebase.database();
     const agentRef = db.ref('admin/agentsMock').child(agentId);
     agentRef.once('value', (snapshot) => {
@@ -79,9 +80,16 @@ const firebaseUtil = {
     );
   },
 
-  getBotInfo: function(fullAgentId, callback) {
+
+  /**
+   * getBotInfo - Get bot info saved in database
+   *
+   * @param  {string} agentName The agent name
+   * @param  {function} callback Callback function
+   */
+  getBotInfo: function(agentName, callback) {
     const db = firebase.database();
-    const agentId = fullAgentId.substring(fullAgentId.lastIndexOf('/') + 1);
+    const agentId = agentName.substring(agentName.lastIndexOf('/') + 1);
     const agentRef = db.ref('admin/agents').child(agentId);
     agentRef.once('value', (snapshot) => {
       const data = snapshot.val();
@@ -92,12 +100,12 @@ const firebaseUtil = {
   /**
    * Saves a new bot mapping for an agent to the datastore.
    *
-   * @param {str} fullAgentId The brand/ID/agent/ID
+   * @param {string} agentName The brand/ID/agent/ID
    * @param {object} formObject The form key/value pairs
    * @param {function} callback
    * Callback method for after the method is complete.
    */
-  saveBotInfo: (fullAgentId, formObject, callback) => {
+  saveBotInfo: (agentName, formObject, callback) => {
     const dfProjectId = formObject.projectId;
     const dfServiceAccountKey = formObject.dfServiceAccountKey;
 
@@ -199,9 +207,9 @@ const firebaseUtil = {
 
   /**
    * setMessageSent - Update an agent message to be "sent"
-   * @param {String} agentId The Agent ID
-   * @param  {String} conversationId The conversation ID
-   * @param  {String} messageId Message ID to set as read
+   * @param {string} agentId The Agent ID
+   * @param  {string} conversationId The conversation ID
+   * @param  {string} messageId Message ID to set as read
    */
   setMessageSent: (agentId, conversationId, messageId) => {
     const db = firebase.database();

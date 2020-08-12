@@ -30,12 +30,6 @@ from google.oauth2.service_account import Credentials
 from firebase_admin import credentials
 from firebase_admin import db
 
-# APIs to enable:
-# businesscommunications.googleapis.com
-# businessmessages.googleapis.com
-# dialogflow.googleapis.com
-# firebase.googleapis.com
-
 FIREBASE_CREDENTIALS_FILE_NAME = 'generated_firebase_credentials.json'
 SERVICE_ACCOUNT_NAME = 'firebase-bm-df-bot'
 
@@ -43,6 +37,11 @@ SERVICE_ACCOUNT_NAME = 'firebase-bm-df-bot'
 def enable_apis():
     """Enable required APIs for project using gcloud command line"""
 
+    # APIs to enable:
+    # businesscommunications.googleapis.com
+    # businessmessages.googleapis.com
+    # dialogflow.googleapis.com
+    # firebase.googleapis.com
     print('Enabling APIs...')
     apis_to_enable = [
         'iam.googleapis.com', 'dialogflow.googleapis.com',
