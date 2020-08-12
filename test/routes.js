@@ -33,6 +33,7 @@ const expect = chai.expect;
 describe('#handleByServer', () => {
   beforeEach(() => {
     sinon.restore();
+    sinon.stub(firebase, 'updateTimestamp').resolves();
   });
   it('should direct messages correctly', async () => {
     // stub duplication + response functions
@@ -131,6 +132,7 @@ describe('#handleByServer', () => {
 describe('#handleByAgent', () => {
   beforeEach(() => {
     sinon.restore();
+    sinon.stub(firebase, 'updateTimestamp').resolves();
   });
   it('should send messages to live agent', async () => {
     const sampleAgent = 'sampleAgent';

@@ -26,6 +26,7 @@ const bmApiHelper = require('./lib/bm_api_helper.js');
 const config = require('./resources/config.json');
 const dfRequest = require('./lib/dialogflow_request.js');
 const firebaseHandler = require('./lib/firebase_handler.js');
+const csatScheduler = require('./lib/csat_scheduler.js');
 const firebase = firebaseHandler.firebase;
 const liveAgentStatus = firebaseHandler.liveAgentStatus;
 const liveAgent = require('./lib/live_agent.js');
@@ -37,6 +38,9 @@ const factory = {
   handleByAgent,
   directMessage,
 };
+
+// start CSAT scheduler
+csatScheduler.startCsatScheduler();
 
 /*
  * Webhook callback function, endpoint for BM
@@ -85,6 +89,7 @@ async function handleByServer(requestBody) {
         text: message,
       };
       await firebase.addMessageId(agentId, conversationId, messageId);
+      await firebase.updateTimestamp(agentId, conversationId, moment().unix());
 
       await firebase.saveMessage(
           agentId,
@@ -108,6 +113,7 @@ async function handleByServer(requestBody) {
       text: message,
     };
 
+    await firebase.updateTimestamp(agentId, conversationId, moment().unix());
     await firebase.saveMessage(
         agentId,
         conversationId,
@@ -147,6 +153,7 @@ async function handleByAgent(requestBody) {
     };
 
     const conversationId = requestBody.conversationId;
+    await firebase.updateTimestamp(agentId, conversationId, moment().unix());
     try {
       // save message + message ID to database
       await firebase.addMessageId(agentId, conversationId, messageId);
@@ -193,7 +200,6 @@ async function directMessage(requestBody) {
   );
   // send stop typing to firebase + update timestamp
   await firebase.setTypingStatus(agentId, conversationId, false);
-  await firebase.updateTimestamp(agentId, conversationId, moment().unix());
   try {
     // check for credentials in Firebase
     if (config.use_firebase_for_credentials) {
