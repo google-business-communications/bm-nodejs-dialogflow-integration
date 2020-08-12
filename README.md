@@ -121,7 +121,7 @@ To start creating behavior for your Dialogflow bot, you must define intents ([le
 
 1. A sample Dialogflow bot is included in `examples/bm_test_bot.zip`. To import it, click the gear icon in the top right, then click **Export and Import**.
 2. Click **IMPORT FROM ZIP** and select `examples/bm_test_bot.zip`.
-3. This example project contains intents for a sample pizza restaurant and has "entities" defined for types of pizza (`$pizza_type`) and method of delivery (`$delivery_method`), which can be seen in the "order pizza" intent.
+3. This example project contains intents for a sample pizza restaurant and has entities defined for types of pizza (`$pizza_type`) and method of delivery (`$delivery_method`), which can be seen in the *order pizza* intent on the **Intents** screen.
 
 ## Running your agent
 
