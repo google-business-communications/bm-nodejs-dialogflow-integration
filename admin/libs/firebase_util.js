@@ -141,7 +141,7 @@ const firebaseUtil = {
       conversationsRef.once('value', (snapshot) => {
         const data = snapshot.val();
         if (!data) {
-          resolve(conversations);
+          resolve([]);
         } else {
           // search for conversations within agent, appending to list of
           // conversations

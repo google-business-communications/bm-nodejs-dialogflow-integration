@@ -31,10 +31,9 @@ router.get('/', function(req, res, next) {
   // send the client the message
   apiHelper.bcApi.brands.list(apiParams, {}, function(err, response) {
     let brands = [];
-    if (response === undefined) {
+    if (response === undefined || response === null) {
       brands = [];
-    }
-    if (response.data !== undefined) {
+    } else if (response.data !== undefined) {
       brands = response.data.brands;
     }
     res.render('brands/list', {brands: brands});
