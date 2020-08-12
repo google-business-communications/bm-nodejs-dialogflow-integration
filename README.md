@@ -58,6 +58,7 @@ Once the project setup script is finished and the app is deployed, it prints out
 
     * Administration Console URL
     * Firebase rule URL
+
 Save these URLs for the next step.
 
 If the administration console URL's domain is different from https://***PROJECT ID***.appspot.com/, then please contact Google to update your webhook URL.
@@ -81,18 +82,18 @@ If the administration console URL's domain is different from https://***PROJECT 
 ### Enable Firebase read/write permissions
 
 Visit the Firebase rules link printed after running the setup script and set your appropriate security rules.
+* For testing, the following rules are suggested (open read/write to all):
 
-    * For testing, the following rules are suggested (open read/write to all):
 ```json
 {
   "rules":{
-    ".read":true,
-    ".write":true
+    ".read": true,
+    ".write": true
   }
 }
 ```
 
-## Design your Dialogflow bot
+## Design your Dialogflow bot from Scratch
 
 To start creating behavior for your Dialogflow bot, you must define intents ([learn more](https://cloud.google.com/dialogflow/docs/intents-overview)).
 
@@ -114,7 +115,13 @@ To start creating behavior for your Dialogflow bot, you must define intents ([le
     a. Create training phrases such as “live agent” and “can I speak to a person?”
     b. Delete the text response.
     c. Create a Custom Payload response, and paste the `examples/live_agent.json` file into the custom payload field.
-7. Once you create your intent, click **Save** and test it in the sidebar to the right.
+7. Once you create your intent, click **Save** and test it in the sidebar to the right after the agent finishes training.
+
+## Importing a pre-made Dialogflow template
+
+1. A sample Dialogflow bot is included in `examples/bm_test_bot.zip`. To import it, click the gear icon in the top right, then click **Export and Import**.
+2. Click **IMPORT FROM ZIP** and select `examples/bm_test_bot.zip`.
+3. This example project contains intents for a sample pizza restaurant and has "entities" defined for types of pizza (`$pizza_type`) and method of delivery (`$delivery_method`), which can be seen in the "order pizza" intent.
 
 ## Running your agent
 
