@@ -17,7 +17,6 @@
 const firebase = require('../../lib/firebase_handler.js').firebase;
 
 // Firebase utility class for managing search queries for an agent
-// (migrated from Datastore)
 const firebaseUtil = {
 
   /**
