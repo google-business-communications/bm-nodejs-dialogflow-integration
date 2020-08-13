@@ -58,7 +58,6 @@ Once the project setup script is finished and the app is deployed, it prints out
 
     * Administration Console URL
     * Firebase rule URL
-
 Save these URLs for the next step.
 
 If the administration console URL's domain is different from https://***PROJECT ID***.appspot.com/, then please contact Google to update your webhook URL.
@@ -76,25 +75,24 @@ If the administration console URL's domain is different from https://***PROJECT 
 2. For the brand you just created, click **See Agents**, then click **Create Agent** in the top right and follow the instructions.
 3. Submit the agent creation request. The agent appears in the **List of Agents** table.
 4. Click the newly created agent. Visit the **Bot Connector** Tab. Copy and paste the exact contents of the file you just downloaded into the **DialogFlow Service Account Key** field.
-5. Type the **Dialogflow Project ID** in the corresponding field.
-6. Fill in the **CSAT Trigger (in minutes)** field. This field specifies after how many minutes of inactivity a customer satisfaction survey will be sent (default 15 minutes)
-7. Click **Save**.
+5. Type the Dialogflow Project ID in the corresponding field.
+6. Click save.
 
 ### Enable Firebase read/write permissions
 
 Visit the Firebase rules link printed after running the setup script and set your appropriate security rules.
-* For testing, the following rules are suggested (open read/write to all):
 
+    * For testing, the following rules are suggested (open read/write to all):
 ```json
 {
   "rules":{
-    ".read": true,
-    ".write": true
+    ".read":true,
+    ".write":true
   }
 }
 ```
 
-## Design your Dialogflow bot from scratch
+## Design your Dialogflow bot
 
 To start creating behavior for your Dialogflow bot, you must define intents ([learn more](https://cloud.google.com/dialogflow/docs/intents-overview)).
 
@@ -116,19 +114,12 @@ To start creating behavior for your Dialogflow bot, you must define intents ([le
     a. Create training phrases such as “live agent” and “can I speak to a person?”
     b. Delete the text response.
     c. Create a Custom Payload response, and paste the `examples/live_agent.json` file into the custom payload field.
-7. Once you create your intent, click **Save**.
-8. After the agent finishes training, test it in the sidebar to the right and in Google Maps/Search.
-
-## Importing a pre-made Dialogflow template
-
-1. A sample Dialogflow bot is included in `examples/bm_test_bot.zip`. To import it, click the gear icon in the top right, then click **Export and Import**.
-2. Click **IMPORT FROM ZIP** and select `examples/bm_test_bot.zip`.
-3. This example project contains intents for a sample pizza restaurant and has entities defined for types of pizza (`$pizza_type`) and method of delivery (`$delivery_method`), which can be seen in the **order pizza** intent on the **Intents** page.
+7. Once you create your intent, click **Save** and test it in the sidebar to the right.
 
 ## Running your agent
 
 1. In the Admin Console (link found in output of the setup script) within the new agent you created, visit the **Agent Info** tab.
-2. Fill in the following fields:
+2. Add the following fields:
     * Agent Name
     * Logo
     * Welcome Message (this will be shown when a user first starts messaging your business)
