@@ -1,0 +1,87 @@
+{
+  "fallback": "Pizza Menu: Cheese, Pepperoni, and Vegetarian",
+  "richCard": {
+    "carouselCard": {
+      "cardContents": [
+        {
+          "title": "Cheese Pizza",
+          "description": "Rich Card #1",
+          "suggestions": [
+            {
+              "reply": {
+                "text": "Order cheese",
+                "postbackData": "Order a cheese pizza"
+              }
+            }
+          ],
+          "media": {
+            "contentInfo": {
+              "altText": "cheese pizza",
+              "forceRefresh": true,
+              "fileUrl": "https://images.unsplash.com/photo-1539952599731-d8195c68a912?ixlib=rb-1.2.1&auto=format&fit=crop&w=1355&q=80"
+            },
+            "height": "MEDIUM"
+          }
+        },
+        {
+          "title": "Pepperoni Pizza",
+          "description": "Rich Card #2",
+          "media": {
+            "contentInfo": {
+              "fileUrl": "https://images.pexels.com/photos/825661/pexels-photo-825661.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
+              "altText": "pepperoni pizza",
+              "forceRefresh": true
+            },
+            "height": "MEDIUM"
+          },
+          "suggestions": [
+            {
+              "reply": {
+                "postbackData": "Order a pepperoni pizza",
+                "text": "Order pepperoni"
+              }
+            }
+          ]
+        },
+        {
+          "title": "Vegetarian Pizza",
+          "media": {
+            "contentInfo": {
+              "fileUrl": "https://images.pexels.com/photos/1260968/pexels-photo-1260968.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=750&w=1260",
+              "forceRefresh": true,
+              "altText": "vegetarian pizza"
+            },
+            "height": "MEDIUM"
+          },
+          "description": "Rich Card #3",
+          "suggestions": [
+            {
+              "reply": {
+                "text": "Order vegetarian",
+                "postbackData": "Order a vegetarian pizza"
+              }
+            }
+          ]
+        }
+      ],
+      "cardWidth": "MEDIUM"
+    }
+  },
+  "suggestions": [
+    {
+      "reply": {
+        "postbackData": "What are your hours?",
+        "text": "What are your hours?"
+      }
+    },
+    {
+      "reply": {
+        "text": "What's on your menu?",
+        "postbackData": "What's on your menu?"
+      }
+    }
+  ],
+  "representative": {
+    "representativeType": "BOT"
+  }
+}

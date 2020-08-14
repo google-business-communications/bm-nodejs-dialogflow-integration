@@ -94,7 +94,7 @@ Visit the Firebase rules link printed after running the setup script and set you
 }
 ```
 
-## Design your Dialogflow bot from scratch
+## Design your Dialogflow bot
 
 To start creating behavior for your Dialogflow bot, you must define intents ([learn more](https://cloud.google.com/dialogflow/docs/intents-overview)).
 
@@ -137,6 +137,7 @@ To start creating behavior for your Dialogflow bot, you must define intents ([le
 3. Click **Submit**.
 4. Open the **Agent test URL** on your iOS or Android device and test your agent.
 5. If the user requests a live agent, you can visit the **Live Agent Chat** tab to chat with the user.
+
 
 ## Message routing
 
