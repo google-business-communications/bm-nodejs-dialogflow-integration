@@ -24,7 +24,6 @@ const firebaseHandler = require('../lib/firebase_handler.js').firebase;
 const bmApiHelper = require('../lib/bm_api_helper.js');
 
 chai.use(chaiAsPromised);
-// chai.should();
 const expect = chai.expect;
 
 describe('#receiveMessage()', () => {
@@ -135,7 +134,6 @@ describe('#agentLeft()', () => {
     await liveAgent.agentLeft(sampleConversationId);
     sinon.assert.calledOnce(fbStub);
     sinon.assert.calledOnce(reprStub);
-    // sinon.assert.calledOnce(csatStub);
   });
 });
 
