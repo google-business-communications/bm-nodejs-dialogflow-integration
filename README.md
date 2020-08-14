@@ -58,6 +58,7 @@ Once the project setup script is finished and the app is deployed, it prints out
 
     * Administration Console URL
     * Firebase rule URL
+
 Save these URLs for the next step.
 
 If the administration console URL's domain is different from https://***PROJECT ID***.appspot.com/, then please contact Google to update your webhook URL.
@@ -75,19 +76,20 @@ If the administration console URL's domain is different from https://***PROJECT 
 2. For the brand you just created, click **See Agents**, then click **Create Agent** in the top right and follow the instructions.
 3. Submit the agent creation request. The agent appears in the **List of Agents** table.
 4. Click the newly created agent. Visit the **Bot Connector** Tab. Copy and paste the exact contents of the file you just downloaded into the **DialogFlow Service Account Key** field.
-5. Type the Dialogflow Project ID in the corresponding field.
-6. Click save.
+5. Type the **Dialogflow Project ID** in the corresponding field.
+6. Fill in the **CSAT Trigger (in minutes)** field. This field specifies after how many minutes of inactivity a customer satisfaction survey will be sent (default 15 minutes)
+7. Click **Save**.
 
 ### Enable Firebase read/write permissions
 
 Visit the Firebase rules link printed after running the setup script and set your appropriate security rules.
+* For testing, the following rules are suggested (open read/write to all):
 
-    * For testing, the following rules are suggested (open read/write to all):
 ```json
 {
   "rules":{
-    ".read":true,
-    ".write":true
+    ".read": true,
+    ".write": true
   }
 }
 ```
@@ -114,12 +116,20 @@ To start creating behavior for your Dialogflow bot, you must define intents ([le
     a. Create training phrases such as “live agent” and “can I speak to a person?”
     b. Delete the text response.
     c. Create a Custom Payload response, and paste the `examples/live_agent.json` file into the custom payload field.
-7. Once you create your intent, click **Save** and test it in the sidebar to the right.
+7. Once you create your intent, click **Save**.
+8. After the agent finishes training, test it in the sidebar to the right and in Google Maps/Search.
+
+## Importing a pre-made Dialogflow template
+
+1. A sample Dialogflow bot is included in `examples/bm_test_bot.zip`. To import it, go to the [Dialogflow console](https://dialogflow.cloud.google.com), and select the previously created project in the top left. 
+2. Click the gear icon in the top right, then click **Export and Import**.
+3. Click **IMPORT FROM ZIP** and select `examples/bm_test_bot.zip`.
+4. This example project contains intents for a sample pizza restaurant and has entities defined for types of pizza (`$pizza_type`) and method of delivery (`$delivery_method`), which can be seen in the **order pizza** intent on the **Intents** page.
 
 ## Running your agent
 
 1. In the Admin Console (link found in output of the setup script) within the new agent you created, visit the **Agent Info** tab.
-2. Add the following fields:
+2. Fill in the following fields:
     * Agent Name
     * Logo
     * Welcome Message (this will be shown when a user first starts messaging your business)
@@ -128,3 +138,14 @@ To start creating behavior for your Dialogflow bot, you must define intents ([le
 3. Click **Submit**.
 4. Open the **Agent test URL** on your iOS or Android device and test your agent.
 5. If the user requests a live agent, you can visit the **Live Agent Chat** tab to chat with the user.
+
+
+## Message routing
+
+As messages are received by the router, they start in the callback function in `routes.js`. The router then verifies that the message is sent from Google routing the message. After the message is verified, the router checks the database to see if the user is currently speaking with the bot or a live agent.
+
+After this is determined, the router checks for credentials in Firebase (if configured). If this passes, then the message will then be directed to `handleByAgent` or `handleByServer`, depending on whether the user is speaking with a live agent or the Dialogflow bot.
+
+`handleByAgent` updates the database with message information, and passes the message onto the live agent by calling `liveAgent.receiveMessage()`
+
+`handleByServer` updates the database with the message information, and sends it to `handleResponse`, seconds typing, then passing the message onto Dialogflow through `dfRequest.callDialogflow()`. This function attempts to retrieve credentials from Firebase, then calls the Dialogflow API through the node.js client library. Results from Dialogflow are then routed to the Business Messages API, where messages are sent to the user.
