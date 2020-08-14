@@ -121,9 +121,10 @@ To start creating behavior for your Dialogflow bot, you must define intents ([le
 
 ## Importing a pre-made Dialogflow template
 
-1. A sample Dialogflow bot is included in `examples/bm_test_bot.zip`. To import it, click the gear icon in the top right, then click **Export and Import**.
-2. Click **IMPORT FROM ZIP** and select `examples/bm_test_bot.zip`.
-3. This example project contains intents for a sample pizza restaurant and has entities defined for types of pizza (`$pizza_type`) and method of delivery (`$delivery_method`), which can be seen in the **order pizza** intent on the **Intents** page.
+1. A sample Dialogflow bot is included in `examples/bm_test_bot.zip`. To import it, gto the [Dialogflow console](https://dialogflow.cloud.google.com), and select the previously created project in the top left. 
+2. Click the gear icon in the top right, then click **Export and Import**.
+3. Click **IMPORT FROM ZIP** and select `examples/bm_test_bot.zip`.
+4. This example project contains intents for a sample pizza restaurant and has entities defined for types of pizza (`$pizza_type`) and method of delivery (`$delivery_method`), which can be seen in the **order pizza** intent on the **Intents** page.
 
 ## Running your agent
 
@@ -147,4 +148,4 @@ After this is determined, the router checks for credentials in Firebase (if conf
 
 `handleByAgent` updates the database with message information, and passes the message onto the live agent by calling `liveAgent.receiveMessage()`
 
-`handleByServer` updates the database with the message information, and sends it to `handleResponse`, seconds typing, then passing the message onto Dialogflow through `dfRequest.callDialogflow()`. This function attempts to retrieve credentials from Firebase, then calls the Dialogflow API through the node.js client library. Results from Dialogflow are then sent to the Business Messages API, where messages are sent to the user.
+`handleByServer` updates the database with the message information, and sends it to `handleResponse`, seconds typing, then passing the message onto Dialogflow through `dfRequest.callDialogflow()`. This function attempts to retrieve credentials from Firebase, then calls the Dialogflow API through the node.js client library. Results from Dialogflow are then routed to the Business Messages API, where messages are sent to the user.
