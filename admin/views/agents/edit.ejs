@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>
+    <%= title %>
+  </title>
+  <%- include('../header.ejs'); %>
+  <script type="text/javascript">
+    var lastQuery;
+
+    $(document).ready(function() {
+      lastQuery = $('#searchQuery').val();
+      performSearch(lastQuery);
+
+      $('#go-link').click(function(e) {
+        e.preventDefault();
+
+        if ($.trim($('#searchQuery').val()) != lastQuery) {
+          performSearch($('#searchQuery').val());
+        }
+      });
+
+      $('#searchQuery').keypress(function(e) {
+        if (e.which == 13) {
+          performSearch($('#searchQuery').val());
+          return false; //<---- Add this line
+        }
+      });
+
+      $('#additional-interactions-remove').click(function(e) {
+        e.preventDefault();
+
+        $('#additional-interactions').remove();
+      });
+
+      $("#availability-add").click(function(e) {
+        e.preventDefault();
+
+        var $el1 = $("#original-availability").find(".hours-container:first").clone();
+        $($el1).prepend('<p>Additional primary availability: <a href="#" class="availability-remove">(remove)</a></p>');
+
+        $("#additional-availability").append($el1);
+      });
+
+      $(document.body).on("click", ".availability-remove", function(e) {
+        e.preventDefault();
+
+        $(this).parent().parent().remove();
+      });
+
+      $("#saveBotInfo").click(function(e) {
+        e.preventDefault();
+
+        let url = '/admin' + $("#botConnectorForm").attr("action");
+        console.log(url);
+
+        $("#saveBotInfo").html("Saving..");
+
+        $.post(url, {
+            projectId: $("#dialogflowProjectId").val(),
+            dfServiceAccountKey: $("#dialogflowServiceAccountKey").val(),
+            bmServiceAccountKey: $("#bmServiceAccountKey").val(),
+            csatTriggerWindow: $("#csatTriggerWindow").val()
+          })
+          .done(function(data) {
+            $("#saveBotInfo").html("Save");
+          });
+      });
+
+      const inputEl = document.getElementById('url-input');
+      const imgEl1 = document.getElementById('preview-1');
+      const imgEl2 = document.getElementById('preview-2');
+      const imgEl3 = document.getElementById('preview-3');
+      const imgEl4 = document.getElementById('preview-4');
+
+      inputEl.addEventListener('change', (event) => {
+        const val = inputEl.value || 'https://www.gstatic.com/rbmconsole/images/default_logo.png';
+        imgEl1.setAttribute('src', val);
+        imgEl2.setAttribute('src', val);
+      });
+
+      const val = inputEl.value || 'https://www.gstatic.com/rbmconsole/images/default_logo.png';
+      imgEl1.setAttribute('src', val);
+      imgEl2.setAttribute('src', val);
+    });
+
+    function performSearch(searchText) {
+      var url = '/admin/agents/search?q=' + encodeURI(searchText) + '&agentId=<%= agent.name %>';
+
+      $('#search-results').contents().find('html').html('<p>Searching...</p>');
+
+      $.getJSON(url, function(response) {
+        $('#search-results').contents().find('html').html(response.result);
+      });
+    }
+  </script>
+  <script src="https://www.gstatic.com/firebasejs/7.15.5/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.15.5/firebase-database.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.27.0/moment.min.js" integrity="sha512-rmZcZsyhe0/MAjquhTgiUcb4d9knaFc7b5xAfju483gbEXTkeJRUMIPk6s3ySZMYUHEcjKbjLjyddGWMrNEvZg==" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.31/moment-timezone-with-data.min.js" integrity="sha512-HZcf3uHWA+Y2P5KNv+F/xa87/flKVP92kUTe/KXjU8URPshczF1Dx+cL5bw0VBGhmqWAK0UbhcqxBbyiNtAnWQ==" crossorigin="anonymous">
+  </script>
+  <script>
+    var config = <%-JSON.stringify(firebaseConfig)%>;
+    firebase.initializeApp(config);
+
+    // create a chat message
+    function createMessage(source, message, timestamp) {
+      var isSender = source === "sender";
+      return `\
+      <div class="media w-50 mb-3 ${isSender ? '' : 'ml-auto'}">${isSender ? '<img src="https://fonts.gstatic.com/s/i/materialicons/person/v6/24px.svg" alt="user" width="50" class="rounded-circle">' : ''} \
+        <div class="media-body ${isSender ? 'ml-3' : ''}"> \
+          <div class="${isSender ? 'bg-light' : 'bg-primary'} rounded py-2 px-2 mb-2"> \
+            <p class="text-small mb-0 ${isSender ? 'text-muted' : 'text-white'}">${message}</p> \
+          </div><p class="text-muted">${moment.unix(timestamp).tz("America/New_York").format('h:mm A | MMM D')}</p> \
+        </div> \
+      </div>`
+    }
+
+    // generate uuid for sending messages
+    function uuidv4() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0,
+          v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
+    // Get a reference to the database service
+    let database = firebase.database();
+    let activeRef;
+    let activeConversationId;
+
+    function setActive(id) {
+      $("#textbox").val("");
+      activeConversationId = id;
+      // sets remaining conversations to unselected
+      let convItems = conversationsList;
+      for (let i = 0; i < convItems.length; i++) {
+        $(`#${convItems[i].conversationId}`).attr('class', "list-group-item list-group-item-action list-group-item-light rounded-0")
+      }
+      // set active conversation
+      $(`#${id}`).attr('class', "list-group-item list-group-item-action active text-white rounded-0");
+      if (activeRef !== undefined) {
+        activeRef.off();
+      }
+      // create listener to update messages from Firebase
+      activeRef = database.ref('conversations/<%- agentId %>/').child(id);
+      activeRef.on('value', (snapshot) => {
+        $("#chatbox").empty();
+        let data = snapshot.val();
+        let messages = data.messages;
+        if (!snapshot.val() || !messages) {
+          return;
+        }
+        if (data.representativeInfo === undefined) { // there is no representative
+          $("#submit-button").prop('disabled', true);
+          $("#textbox").prop('disabled', true)
+          setJoinButton();
+          $("#typing").prop('hidden', true);
+        } else { // representative currently messaging
+          $("#submit-button").prop('disabled', false);
+          $("#textbox").prop('disabled', false)
+          setLeaveButton();
+          if (data.userIsTyping) { // add whether user is typing
+            $("#typing").text(data.name + " is typing...");
+            $("#typing").prop('hidden', false);
+          } else {
+            $("#typing").prop('hidden', true);
+          }
+        }
+        // sort messages by timestamp
+        let sortedMessages = [];
+        for (const key in messages) {
+          sortedMessages.push(messages[key]);
+        }
+        sortedMessages.sort((a, b) => {
+          return a.timestamp - b.timestamp;
+        });
+        // add messages to the chat box
+        for (let i = 0; i < sortedMessages.length; i++) {
+          let message = sortedMessages[i];
+          if (message.messageInfo === undefined) {
+            continue;
+          }
+          let text = message.messageInfo.text;
+          if (text !== undefined) {
+            // make sure message has correct sender
+            if (message.sender === "AGENT") {
+              $("#chatbox").append(createMessage('receiver', text, message.timestamp));
+            } else if (message.sender === "BOT") {
+              $("#chatbox").append(createMessage('receiver', "[BOT] " + text, message.timestamp));
+            } else {
+              $("#chatbox").append(createMessage('sender', text, message.timestamp));
+            }
+          } else {
+            $("#chatbox").append(createMessage('receiver', "[BOT] &lt;Rich content not supported&gt;", message.timestamp));
+          }
+          $("#chatbox").scrollTop($("#chatbox").prop('scrollHeight'));
+        }
+      });
+
+      // add listeners for onclick and enter for sending messages
+      $("#submit-button").unbind().click(submitMessage);
+      let canSend = true;
+      let canSendTimeout; // timeout to reset canSend (throttling) - 30 seconds
+      let sendStopTimeout; // timeout to send stopTyping - 5 seconds
+      $("#textbox").unbind().on("keyup", (event) => {
+        if (event.keyCode === 13) {
+          event.preventDefault();
+          clearTimeout(sendStopTimeout);
+          sendStopTyping();
+          submitMessage();
+        } else {
+          if (canSend) {
+            sendStartTyping();
+            canSend = false;
+            if (!canSendTimeout) {
+              canSendTimeout = setTimeout(() => {
+                canSend = true
+              }, 30000);
+            }
+          }
+          clearTimeout(sendStopTimeout);
+          sendStopTimeout = setTimeout(() => {
+            sendStopTyping();
+            canSend = true;
+          }, 3000)
+        }
+      })
+    }
+
+    // submit message to Firebase
+    function submitMessage() {
+      // console.log("called submitmessage");
+      if ($("#textbox").val() !== "") {
+        activeRef.child('messages').push({
+          messageInfo: {
+            text: $("#textbox").val(),
+            messageId: uuidv4(),
+            representative: {
+              representativeType: "HUMAN"
+            }
+          },
+          sender: "AGENT",
+          timestamp: moment().unix()
+        }, () => {
+          $("#textbox").val("");
+        })
+      }
+    }
+
+    function sendJoinRequest() {
+      let agentName = prompt("Agent Name:")
+      if (agentName !== "") {
+        $.post('/admin/agents/live_agent', {
+          agentId: '<%-agentId%>',
+          type: 'join',
+          name: agentName,
+          conversationId: activeConversationId,
+        }).done((data) => {
+          setLeaveButton()
+        })
+      }
+    }
+
+    function sendStartTyping() {
+      $.post('/admin/agents/live_agent', {
+        type: 'start_typing',
+        conversationId: activeConversationId
+      })
+    }
+
+    function sendStopTyping() {
+      $.post('/admin/agents/live_agent', {
+        type: 'stop_typing',
+        conversationId: activeConversationId
+      })
+    }
+
+    function setJoinButton() {
+      $("#leave-button").hide();
+      $("#join-button").show();
+    }
+
+    function setLeaveButton() {
+      $("#join-button").hide();
+      $("#leave-button").show();
+    }
+
+    function sendLeaveRequest() {
+      $.post('/admin/agents/live_agent', {
+        agentId: '<%-agentId%>',
+        type: 'leave',
+        conversationId: activeConversationId,
+      }).done((data) => {
+        setJoinButton()
+      })
+    }
+  </script>
+</head>
+
+<body>
+  <div class="container">
+    <h1><%= title %></h1>
+    <div class="row">
+      <div class="col-md-12 col-sm-12">
+        <% if (message) { %>
+        <div class="alert alert-danger" role="alert">
+          <%= message %>
+        </div>
+        <% } %>
+
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+          <li class="nav-item">
+            <a class="nav-link active" id="mock-tab" data-toggle="tab" href="#mock" role="tab" aria-controls="mock" aria-selected="true">Agent Info</a>
+          </li>
+          <% if(isEdit) { %>
+          <li class="nav-item">
+            <a class="nav-link" id="bot-connector-tab" data-toggle="tab" href="#bot-connector" role="tab" aria-controls="bot-connector" aria-selected="false">Bot Connector</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="search-tab" data-toggle="tab" href="#search-entry-point" role="tab" aria-controls="search-entry-point" aria-selected="false">Search Entry Point</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="live-agent-tab" data-toggle="tab" href="#live-agent-chat" role="tab" aria-controls="live-agent-chat" aria-selected="false">Live Agent Chat</a>
+          </li>
+          <% } %>
+        </ul>
+
+        <div class="tab-content" id="myTabContent">
+          <div class="tab-pane fade show active" id="mock" role="tabpanel" aria-labelledby="home-tab">
+            <form style="margin-top: 20px;" action="<%= formUrl %>" method="post">
+              <div class="form-group">
+                <label>Agent Name</label>
+                <input class="form-control" required maxlength="40" value="<%= agent.displayName; %>" type="text" name="displayName">
+              </div>
+              <div class="form-group">
+                <label>Logo (1024x1024px PNG)</label>
+                <input id="url-input" class="form-control" required placeholder="http://" value="<%= agent.businessMessagesAgent.logoUrl; %>" type="text" name="logoUrl">
+              </div>
+
+              <div>
+                <img alt="" id="preview-1" class="large preview" src="https://www.gstatic.com/rbmconsole/images/default_logo.png">
+                <img alt="" id="preview-2" class="small preview" src="https://www.gstatic.com/rbmconsole/images/default_logo.png">
+              </div>
+
+              <div class="form-group">
+                <label>Custom Agent ID</label>
+                <textarea class="form-control" type="text" placeholder="" name="customAgentId" value="<%=  agent.businessMessagesAgent.customAgentId; %>"></textarea>
+              </div>
+
+              <p class="font-weight-bold">Conversation settings:</p>
+              <div class="form-group">
+                <label>Locale</label>
+                <select class="form-control" name="locale">
+                  <option value="en">English</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Welcome message</label>
+                <textarea class="form-control" required placeholder="" name="welcomeMessage"><%= agent.businessMessagesAgent.conversationalSettings.en.welcomeMessage.text; %></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Privacy policy</label>
+                <input class="form-control" required placeholder="http://" value="<%= agent.businessMessagesAgent.conversationalSettings.en.privacyPolicy.url; %>" type="text" name="privacyPolicy">
+              </div>
+
+              <div class="form-group">
+                <p class="font-weight-bold">Conversational starters: </p>
+                <div>
+                  <%
+                      var starters = [];
+                      var default_suggestion = { suggestion: { reply: { text: '', postbackData: '' } } };
+                      if(agent.businessMessagesAgent.conversationalSettings.en.conversationStarters != undefined) {
+                        starters = agent.businessMessagesAgent.conversationalSettings.en.conversationStarters;
+                      }
+                    %>
+                  <% for(var i = 0; i < 5; i++) { %>
+                  <%- include('../components/conversational_starter.ejs', {
+                          controlName: 'conversationalStarter', starter: i < starters.length ? starters[i] : default_suggestion }); %>
+                  <% } %>
+                </div>
+              </div>
+
+              <p class="font-weight-bold">Primary agent interaction:</p>
+              <div class="form-group">
+                <label>Interaction type</label>
+                <select class="form-control" name="primaryAgentInteraction.interactionType">
+                  <option <%= agent.businessMessagesAgent.primaryAgentInteraction.interactionType == 'BOT' ? 'selected': 'false' %> value="BOT">BOT</option>
+                  <option <%= agent.businessMessagesAgent.primaryAgentInteraction.interactionType == 'HUMAN' ? 'selected': 'false' %> value="HUMAN">HUMAN</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <p class="font-weight-bold">Availability: <a href="#" id="availability-add">(add)</a></p>
+                <div id="original-availability">
+                  <% if(agent.businessMessagesAgent.primaryAgentInteraction.botRepresentative != undefined) {
+                        var botAvailability = agent.businessMessagesAgent.primaryAgentInteraction.botRepresentative.botMessagingAvailability;
+                        var hours = (typeof botAvailability.hours == 'undefined' ? templateHours : botAvailability.hours);
+                    %>
+                  <% for(var i = 0; i < hours.length; i++) { %>
+                  <%- include('../components/store_hours.ejs', {timezones: timezones,
+                          controlName: 'primary.availability', hour: hours[i], showRemove: i > 0}); %>
+                  <% } %>
+                  <% } %>
+
+                  <% if(agent.businessMessagesAgent.primaryAgentInteraction.humanRepresentative != undefined) { %>
+                  <%
+                        var humanAvailability = agent.businessMessagesAgent.primaryAgentInteraction.humanRepresentative.humanMessagingAvailability;
+                        var hours = (typeof humanAvailability.hours == 'undefined' ? templateHours : humanAvailability.hours);
+                      %>
+
+                  <% for(var i = 0; i < hours.length; i++) { %>
+                  <%- include('../components/store_hours.ejs', {timezones: timezones,
+                          controlName: 'primary.availability', hour: hours[i], showRemove: i > 0}); %>
+                  <% } %>
+                  <% } %>
+                </div>
+              </div>
+
+              <div id="additional-availability"></div>
+
+              <% if (agent.businessMessagesAgent.additionalAgentInteractions != undefined) {
+                    agentInteraction = agent.businessMessagesAgent.additionalAgentInteractions[0];
+                %>
+              <div id="additional-interactions">
+                <p class="font-weight-bold">Additional agent interaction: <a href="#" id="additional-interactions-remove">(remove)</a></p>
+                <div class="form-group">
+                  <label>Interaction type</label>
+                  <select class="form-control" name="additionalAgentInteraction.interactionType">
+                    <option value="BOT" <%= agentInteraction.interactionType == 'BOT' ? 'selected': 'false' %>>BOT
+                    </option>
+                    <option <%= agentInteraction.interactionType == 'HUMAN' ? 'selected': 'false' %> value="HUMAN">HUMAN
+                    </option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <p class="font-weight-bold">Availability:</p>
+                  <% if(agentInteraction.botRepresentative != undefined) {
+                          var botAvailability = agentInteraction.botRepresentative.botMessagingAvailability;
+                          var hours = (typeof botAvailability.hours == 'undefined' ? templateHours : botAvailability.hours);
+                      %>
+
+                  <% for(var i = 0; i < hours.length; i++) { %>
+                  <%- include('../components/store_hours.ejs', {timezones: timezones,
+                            controlName: 'additional.availability', hour: hours[i], showRemove: false}); %>
+                  <% } %>
+                  <% } %>
+
+                  <% if(agentInteraction.humanRepresentative != undefined) { %>
+                  <% hours = agentInteraction.humanRepresentative.humanMessagingAvailability.hours; %>
+                  <%
+                          var humanAvailability = agentInteraction.humanRepresentative.humanMessagingAvailability;
+                          var hours = (typeof humanAvailability.hours == 'undefined' ? templateHours : humanAvailability.hours);
+                        %>
+
+                  <% for(var i = 0; i < hours.length; i++) { %>
+                  <%- include('../components/store_hours.ejs', {timezones: timezones,
+                            controlName: 'additional.availability', hour: hours[i], showRemove: false}); %>
+                  <% } %>
+                  <% } %>
+                </div>
+              </div>
+              <% } %>
+
+              <% if(isEdit) { %>
+              <p class="font-weight-bold">Test settings:</p>
+              <div class="form-group">
+                <label>Agent test URL</label>
+                <input class="form-control" readonly value="<%= agent.businessMessagesAgent.agentTestUrl %>" type="text" name="">
+              </div>
+              <% } %>
+
+              <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+          </div>
+          <div class="tab-pane fade" id="bot-connector" role="tabpanel" aria-labelledby="bot-connector-tab">
+            <form style="margin-top: 20px;" id="botConnectorForm" action="<%= botConnectorUrl %>" method="post">
+              <div class="form-group">
+                <label>CSAT Trigger (in minutes)</label>
+                <input class="form-control" maxlength="4" id="csatTriggerWindow" value="<%= botObject ? botObject.csatTriggerWindow : '' %>" type="text" name="csatTriggerWindow">
+              </div>
+
+              <div class="form-group">
+                <label>Dialogflow Project ID</label>
+                <input class="form-control" maxlength="40" id="dialogflowProjectId" value="<%= botObject ? botObject.projectId : '' %>" type="text" name="dialogflowProjectId">
+              </div>
+
+              <div class="form-group">
+                <label>Dialogflow Service Account Key</label>
+                <textarea class="form-control" rows="8" id="dialogflowServiceAccountKey" placeholder="" name="dialogflowServiceAccountKey"><%= botObject ? botObject.dfServiceAccountKey : '' %></textarea>
+              </div>
+
+              <div class="row">
+                <div class="col-12">
+                  <a href="#" id="saveBotInfo" class="btn btn-primary">Save</a>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="tab-pane fade" id="search-entry-point" role="tabpanel" aria-labelledby="search-tab">
+            <p class="mt-3" font-weight-bold>Entry point mock:</p>
+            <div class="row">
+              <div class="col-md-12 col-sm-12" style="background: #fff;
+                  border: 1px solid #dfe1e5;
+                  box-shadow: none;
+                  border-radius: 24px;
+                  z-index: 3;
+                  height: 44px;
+                  margin: 0; margin-left: 10px; margin-right: 10px;">
+                <div class="row">
+                  <div class="col-11" style="padding-right: 0px;">
+                    <input style="border: none; background-color: transparent; margin: 0; padding: 0; outline: none; height: 44px;" class="form-control search-input" id="searchQuery" value="<%= locationQuery; %>" type="text" name="searchQuery"
+                      placeholder="Google Search Query (Must match a single brand location)">
+                  </div>
+                  <div class="col-1" id="go-link" style="padding-left: 0px; fill: #4285f4;">
+                    <a href="#"><svg style="display: block; width: 24px; height: 24px; margin-top: 7px;" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z">
+                        </path>
+                      </svg></a>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="row" style="margin-top: 20px;">
+              <div class="col-md-12 col-sm-12">
+                <iframe id="search-results" style="width: 50%; border: 0;" height="800" scrolling="no"></iframe>
+              </div>
+            </div>
+          </div>
+          <div class="tab-pane fade" id="live-agent-chat" role="tabpanel" aria-labelledby="live-agent-tab">
+            <div>
+              <div>
+                <% if (message) { %>
+                <div class="alert alert-danger" role="alert">
+                  <%= message %>
+                </div>
+                <% } %>
+                <div>
+                  <% if (locals.displayName && locals.conversationId) { %>
+                  <div>Hame: <%= locals.displayName %></div>
+                  <div>Conversation Id: <%= locals.conversationId %></div>
+                  <% } %>
+                </div>
+                <div class="container py-4 px-2">
+
+                  <div class="row rounded-lg overflow-hidden shadow">
+                    <!-- Users box-->
+                    <div class="col-5 px-0">
+                      <div class="bg-white">
+
+                        <div class="bg-gray px-4 py-2 bg-light">
+                          <p class="h5 mb-0 py-1">Chat</p>
+                        </div>
+
+                        <div class="messages-box">
+                          <div class="list-group rounded-0" id="thread-list">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- Chat Box-->
+                    <div class="col-7 px-0">
+                      <button type="button" class="btn btn-success my-2" style="position: absolute; left: 2.5%; width: 35%; display: none;" onclick="sendJoinRequest()" id="join-button">Join Conversation</button>
+                      <button type="button" class="btn btn-danger my-2" style="position: absolute; left: 2.5%; width: 35%; display: none;" onclick="sendLeaveRequest()" id="leave-button">Leave Conversation</button>
+                      <div id="chatbox" class="px-4 py-5 chat-box bg-white">
+                      </div>
+                      <div id="typing" class="text-secondary px-3" style="position: absolute; bottom: 10%" hidden>displayName is typing...</div>
+                      <!-- Typing area -->
+                      <div action="#" class="bg-light">
+                        <div class="input-group">
+                          <input id="textbox" type="text" placeholder="Type a message" disabled aria-describedby="button-addon2" class="form-control rounded-0 border-0 py-2 bg-light">
+                          <div class="input-group-append">
+                            <button id="submit-button" class="btn btn-link" disabled> <i class="fa fa-paper-plane"></i></button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="mt-3"><a href="/admin/agents?brandId=<%= brandId %>">← Back to agents</a></p>
+      </div>
+    </div>
+  </div>
+  <script>
+    // creates a conversation thread
+    function createConversation(conversation) {
+      let convId = conversation.conversationId;
+      let timestamp = conversation.lastTimestamp;
+      return `<a href="#" id="${convId}"\
+      class="list-group-item list-group-item-action list-group-item-light rounded-0"\
+      onclick="setActive('${convId}')">\
+      <div class="media"><img\
+          src="https://fonts.gstatic.com/s/i/materialicons/person/v6/24px.svg" alt="user"\
+          width="50" class="rounded-circle">\
+        <div class="media-body ml-4">\
+          <div class="d-flex align-items-center justify-content-between mb-1">\
+            <h6 class="mb-0">${conversation.displayName}</h6><small\
+              class="font-weight-bold">${moment.unix(timestamp).tz("America/New_York").format('MMM D')}</small>\
+          </div>\
+          <p class="font-italic mb-0 text-small">\
+            ${conversation.requestedAgent ? "[REQUESTED AGENT]" : convId}</p>\
+        </div>\
+      </div>\
+    </a>`
+    }
+
+    // retrieves list of conversations from Firebase
+    function getConversationsList() {
+      const db = firebase.database();
+      const agentId = "<%- agentId %>"
+      const conversationsRef = db.ref('conversations/' + agentId);
+      conversationsRef.on('value', (snapshot) => {
+        const conversations = [];
+        const data = snapshot.val();
+        const convIds = Object.keys(data);
+        // pushes important information to array for sorting
+        for (let i = 0; i < convIds.length; i++) {
+          const id = convIds[i];
+          conversations.push({
+            conversationId: id,
+            displayName: data[id].name,
+            lastTimestamp: data[id].lastTimestamp,
+            requestedAgent: data[id].requestedLiveAgent
+          });
+        }
+        conversations.sort((a, b) => {
+          return b.lastTimestamp - a.lastTimestamp;
+        });
+        conversationsList = conversations;
+        // appends conversations as children of box
+        if (conversations !== null && conversations !== undefined) {
+          $("#thread-list").empty();
+          for (let i = 0; i < conversations.length; i++) {
+            let conversation = conversations[i];
+            $("#thread-list").append(createConversation(conversation));
+          }
+        }
+        if (activeConversationId !== null && activeConversationId !== undefined) {
+          $(`#${activeConversationId}`).attr('class', "list-group-item list-group-item-action active text-white rounded-0");
+        }
+      });
+    }
+    getConversationsList();
+  </script>
+</body>
+
+</html>

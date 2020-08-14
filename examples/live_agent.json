@@ -1,0 +1,12 @@
+{
+  "suggestions": [
+    {
+      "liveAgentRequest": {}
+    }
+  ],
+  "representative": {
+    "representativeType": "BOT"
+  },
+  "text": "Tap the button below to request a live agent.",
+  "fallback": "Live agent requests are not supported on this device."
+}
