@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@google-cloud/dialogflow": "^2.0.0",
-    "axios": "^0.19.2",
+    "axios": "^0.28.0",
     "body-parser": "^1.19.0",
     "businesscommunications": "^1.0.0",
     "businessmessages": "^1.0.0",
